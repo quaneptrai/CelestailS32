@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-31T00:00:00+07:00",
+  "pageReferenceConvention": "pdf-viewer-page-1-based",
+  "sources": [
+    {
+      "id": "nxp-s32k1xx-rm-rev14-2",
+      "kind": "reference-manual-set",
+      "title": "S32K1xx Reference Manual",
+      "vendor": "NXP Semiconductors",
+      "revision": "14.2",
+      "date": "2026-02",
+      "localPath": "D:\\Downloads\\S32K1-RM.pdf",
+      "pageCount": 2210,
+      "bytes": 15353911,
+      "sha256": "A5887DD7CCE88C8D965524BF951760E02E13CD19153D0E598FB56C8474E25E77",
+      "authorityFor": [
+        "memory-map",
+        "pin-mux",
+        "peripheral-registers",
+        "clock-tree",
+        "reset",
+        "interrupt-routing"
+      ]
+    },
+    {
+      "id": "nxp-s32k1xx-datasheet-rev15",
+      "kind": "datasheet",
+      "title": "S32K1xx Data Sheet",
+      "vendor": "NXP Semiconductors",
+      "revision": "15",
+      "date": "2026-03-05",
+      "localPath": "D:\\Downloads\\S32K1xx-DataSheet.pdf",
+      "pageCount": 108,
+      "bytes": 1843583,
+      "sha256": "ABC7B1A0E5BA9A6761BC261C5BA17CE80BB608BF2372DEBFEDD8C73C02245CC0",
+      "authorityFor": [
+        "device-features",
+        "electrical-limits",
+        "timing",
+        "power",
+        "package-options"
+      ]
+    },
+    {
+      "id": "nxp-frdmpk144-q100-sch-28810-revb",
+      "kind": "board-schematic",
+      "title": "FRDMPK144-Q100 Schematic",
+      "vendor": "NXP/Freescale",
+      "revision": "B",
+      "date": "2015-07-20",
+      "localPath": "D:\\Downloads\\S32K144EVB-SCH-29248-RB.pdf",
+      "internalDocumentNumber": "SCH-28810 / SPF-28810",
+      "filenameDocumentNumberMismatch": true,
+      "pageCount": 6,
+      "bytes": 175800,
+      "sha256": "3619C9566089DA93CE3ADE066FDB747164FD13EBE558D78FE198956E2D02960A",
+      "authorityFor": [
+        "board-net-connections",
+        "onboard-leds",
+        "buttons",
+        "opensda-uart",
+        "power-selection",
+        "headers",
+        "swd-jtag"
+      ]
+    },
+    {
+      "id": "arm-ddi0403e-e-armv7m",
+      "kind": "architecture-reference-manual",
+      "title": "Armv7-M Architecture Reference Manual",
+      "vendor": "Arm Limited",
+      "revision": "DDI 0403E.e (ID021621)",
+      "date": "2021-02",
+      "localPath": "D:\\Downloads\\DDI0403E_e_armv7m_arm.pdf",
+      "pageCount": 858,
+      "bytes": 5957561,
+      "sha256": "76500176D20F897EAF05EEADB5A6202CEF641E332073B107905C8898E0EE0747",
+      "authorityFor": [
+        "armv7m-programmer-model",
+        "instruction-set",
+        "memory-model",
+        "exceptions",
+        "nvic",
+        "systick",
+        "debug-architecture"
+      ]
+    }
+  ]
+}
+

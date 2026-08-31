@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.next/
+out/
+storage/
+.prototype-server.pid
+**/.screenshots/
+**/.chrome-reference/
+**/__pycache__/
+*.pyc
+.reference/
+*.log

@@ -1,0 +1,1162 @@
+/* ARIS — S32K144 learning adapter over SolarXplorer. */
+html:root {
+  --nasa-blue: #2563eb;
+  --nasa-red: #f59e0b;
+  --nasa-white: #f8fafc;
+  --nasa-gray: #cbd5e1;
+  --nasa-dark-gray: #334155;
+  --deep-space: #020617;
+  --cosmic-blue: #0b1730;
+  --star-gold: #7dd3fc;
+  --nebula-purple: #818cf8;
+  --comet-blue: #38bdf8;
+  --asteroid-orange: #fbbf24;
+  --planet-green: #34d399;
+  --panel-bg: rgba(7, 17, 32, 0.94);
+  --panel-border: rgba(125, 211, 252, 0.42);
+  --button-primary: linear-gradient(135deg, #0f766e, #1d4ed8);
+  --button-secondary: linear-gradient(135deg, #172033, #24324a);
+  --button-active: linear-gradient(135deg, #0f766e, #2563eb);
+  --button-hover: linear-gradient(135deg, #155e75, #1e40af);
+  --mcu-cyan: #7dd3fc;
+  --mcu-pink: #fbbf24;
+  --mcu-violet: #818cf8;
+  --mcu-green: #34d399;
+  --mcu-ink: #07111f;
+}
+
+body.mcu-neon-theme::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  opacity: .05;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 3px,
+    rgba(101, 247, 255, .06) 4px
+  );
+  mix-blend-mode: screen;
+}
+
+.mcu-neon-theme .controls,
+.mcu-neon-theme .celestial-panel,
+.mcu-neon-theme .info,
+.mcu-neon-theme .planet-info-card {
+  background:
+    linear-gradient(145deg, rgba(18, 22, 62, .96), rgba(7, 10, 31, .92));
+  border: 1px solid rgba(101, 247, 255, .42);
+  box-shadow:
+    0 0 0 1px rgba(255, 91, 200, .08) inset,
+    0 16px 48px rgba(0, 0, 0, .5),
+    0 0 26px rgba(101, 247, 255, .08);
+}
+
+.mcu-neon-theme .control-header,
+.mcu-neon-theme .celestial-header,
+.mcu-neon-theme .planet-info-header {
+  background:
+    linear-gradient(100deg, rgba(15, 118, 110, .98), rgba(29, 78, 216, .96) 64%, rgba(14, 116, 144, .98));
+  border-bottom-color: var(--mcu-cyan);
+  box-shadow: 0 2px 18px rgba(56, 189, 248, .2);
+}
+
+.mcu-neon-theme .control-header h3,
+.mcu-neon-theme .celestial-header h4,
+.mcu-neon-theme .planet-info-title {
+  text-shadow: 0 0 12px rgba(101, 247, 255, .55);
+  letter-spacing: 1.2px;
+}
+
+.mcu-neon-theme .control-group button,
+.mcu-neon-theme .label-toggle,
+.mcu-neon-theme .follow-moon-btn {
+  background: linear-gradient(145deg, rgba(28, 33, 78, .98), rgba(15, 20, 52, .98));
+  border: 1px solid rgba(101, 247, 255, .45);
+  color: #e9faff;
+  box-shadow: 0 0 12px rgba(101, 247, 255, .08);
+}
+
+.mcu-neon-theme .control-group button:hover,
+.mcu-neon-theme .label-toggle:hover,
+.mcu-neon-theme .follow-moon-btn:hover {
+  border-color: var(--mcu-pink);
+  color: var(--mcu-cyan);
+  box-shadow: 0 0 18px rgba(255, 91, 200, .28);
+}
+
+.mcu-neon-theme .control-group button.active {
+  background: linear-gradient(135deg, #7c3cff, #e932a4);
+  border-color: #ff9de0;
+}
+
+.mcu-neon-theme .info-item,
+.mcu-neon-theme .planet-description,
+.mcu-neon-theme .moon-item,
+.mcu-neon-theme .controls-info {
+  background: rgba(7, 12, 38, .8);
+  border-color: rgba(101, 247, 255, .3);
+}
+
+.mcu-neon-theme .moon-item:hover {
+  background: linear-gradient(105deg, rgba(87, 45, 154, .45), rgba(10, 47, 81, .56));
+  border-color: var(--mcu-pink);
+}
+
+.mcu-neon-theme .info-item-label,
+.mcu-neon-theme .moon-name,
+.mcu-neon-theme .info-section h4 {
+  color: var(--mcu-cyan);
+}
+
+.mcu-neon-theme .planet-type-badge {
+  background: #07172c;
+  color: var(--mcu-cyan);
+  border: 1px solid var(--mcu-cyan);
+}
+
+.mcu-neon-theme .follow-planet-btn,
+.mcu-neon-theme .follow-sun-btn {
+  background: linear-gradient(110deg, #ff4ebf, #854dff 55%, #36cbe7);
+  border-color: rgba(255, 255, 255, .45);
+  color: #fff;
+  box-shadow: 0 7px 22px rgba(154, 85, 255, .34);
+}
+
+.mcu-neon-theme .nasa-footer {
+  color: #a7b8da;
+  letter-spacing: 1px;
+}
+
+.mcu-neon-theme .nasa-footer a {
+  color: var(--mcu-cyan);
+}
+
+.mcu-neon-toolbar {
+  position: fixed;
+  top: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 990;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-width: 460px;
+  padding: 7px 8px 7px 15px;
+  border: 1px solid rgba(101, 247, 255, .5);
+  border-radius: 8px;
+  color: #effcff;
+  background: linear-gradient(115deg, rgba(8, 12, 37, .93), rgba(32, 19, 72, .92));
+  backdrop-filter: blur(16px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .46), 0 0 24px rgba(101, 247, 255, .11);
+  font-family: "Orbitron", monospace;
+}
+
+.mcu-brand-mark {
+  flex: 1;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+}
+
+.mcu-brand-mark span {
+  color: var(--mcu-pink);
+}
+
+.mcu-brand-mark small {
+  margin-left: 6px;
+  color: var(--mcu-cyan);
+  font-size: 8px;
+}
+
+.mcu-toolbar-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.mcu-toolbar-actions button,
+#showUIBtn {
+  appearance: none;
+  border: 1px solid rgba(101, 247, 255, .55);
+  border-radius: 5px;
+  padding: 7px 11px;
+  color: #f7fbff;
+  background: linear-gradient(120deg, #312065, #9f307e);
+  font: 700 9px/1 "Orbitron", monospace;
+  letter-spacing: .8px;
+  cursor: pointer;
+}
+
+.mcu-toolbar-actions button:hover,
+#showUIBtn:hover {
+  border-color: #ff9de0;
+  box-shadow: 0 0 18px rgba(255, 91, 200, .35);
+}
+
+#showUIBtn {
+  top: 16px;
+  left: 16px;
+  right: auto;
+  z-index: 2000;
+  padding: 10px 15px;
+  background: linear-gradient(120deg, #8d37e3, #e932a4);
+}
+
+body.universe-only .controls,
+body.universe-only .celestial-panel,
+body.universe-only .info,
+body.universe-only #planetInfoCard,
+body.universe-only #eclipseTourInfo,
+body.universe-only .nasa-footer,
+body.universe-only .mcu-neon-toolbar {
+  display: none !important;
+}
+
+body.universe-only #showUIBtn {
+  display: block !important;
+}
+
+#planetInfoCard[data-mcu-mode] {
+  width: min(980px, calc(100vw - 34px));
+  max-width: 980px;
+  max-height: calc(100vh - 100px);
+}
+
+#planetInfoCard[data-mcu-mode] .planet-info-content {
+  max-height: calc(100vh - 158px);
+}
+
+#planetInfoCard[data-mcu-mode] .planet-info-title {
+  font-size: 19px;
+  line-height: 1.25;
+}
+
+#planetInfoCard[data-mcu-mode] .planet-type-badge {
+  flex: 0 0 auto;
+  font-size: 9px;
+}
+
+#planetInfoCard[data-mcu-mode] .info-item-value {
+  overflow-wrap: anywhere;
+  line-height: 1.3;
+}
+
+#planetInfoCard[data-mcu-mode="domain"] .moon-item,
+#planetInfoCard[data-mcu-mode="atlas"] .moon-item {
+  grid-template-columns: minmax(170px, .8fr) minmax(260px, 1.55fr) auto;
+  align-items: center;
+}
+
+#planetInfoCard[data-mcu-mode="topic"] #moonsContainer {
+  display: block;
+}
+
+.mcu-node-item[tabindex] {
+  cursor: pointer;
+}
+
+.mcu-node-item[tabindex]:focus-visible {
+  outline: 2px solid var(--mcu-cyan);
+  outline-offset: -2px;
+}
+
+.mcu-level-chip {
+  display: inline-flex;
+  margin-left: 8px;
+  padding: 3px 7px;
+  border: 1px solid rgba(255, 91, 200, .65);
+  border-radius: 999px;
+  color: #ff9de0;
+  font-size: 8px;
+  vertical-align: middle;
+}
+
+.mcu-lesson {
+  display: grid;
+  gap: 12px;
+  color: #dbe7ff;
+  font-size: 13px;
+}
+
+.mcu-lesson-hero,
+.mcu-lesson-block,
+.mcu-code-block,
+.mcu-source-strip {
+  border: 1px solid rgba(101, 247, 255, .28);
+  border-radius: 7px;
+  background: linear-gradient(145deg, rgba(10, 16, 45, .92), rgba(15, 11, 43, .92));
+}
+
+.mcu-lesson-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 15px 17px;
+  border-color: rgba(255, 91, 200, .48);
+}
+
+.mcu-lesson-hero::after {
+  content: "GPIO://READY";
+  position: absolute;
+  right: 14px;
+  top: 10px;
+  color: rgba(101, 247, 255, .16);
+  font: 800 19px "Orbitron", monospace;
+}
+
+.mcu-kicker,
+.mcu-lesson h5,
+.mcu-code-head,
+.mcu-source-strip > span {
+  color: var(--mcu-cyan);
+  font-family: "Orbitron", monospace;
+  font-weight: 700;
+  letter-spacing: .8px;
+}
+
+.mcu-lesson-hero p {
+  position: relative;
+  z-index: 1;
+  max-width: 82%;
+  margin: 7px 0 0;
+  line-height: 1.55;
+}
+
+.mcu-lesson-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.mcu-lesson-block {
+  padding: 13px 15px;
+}
+
+.mcu-lesson h5 {
+  margin: 0 0 9px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid rgba(101, 247, 255, .2);
+  font-size: 10px;
+}
+
+.mcu-lesson ol {
+  margin: 0;
+  padding-left: 22px;
+}
+
+.mcu-lesson li {
+  margin: 0 0 6px;
+  padding-left: 3px;
+  line-height: 1.42;
+}
+
+.mcu-lesson li::marker {
+  color: var(--mcu-pink);
+  font-family: "Orbitron", monospace;
+}
+
+.mcu-table-wrap {
+  overflow-x: auto;
+}
+
+.mcu-register-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.mcu-register-table th {
+  padding: 8px 9px;
+  color: #ff9de0;
+  text-align: left;
+  font: 700 9px "Orbitron", monospace;
+  letter-spacing: .5px;
+  background: rgba(154, 85, 255, .14);
+}
+
+.mcu-register-table td {
+  padding: 9px;
+  border-top: 1px solid rgba(101, 247, 255, .14);
+  vertical-align: top;
+  line-height: 1.4;
+}
+
+.mcu-register-table code,
+.mcu-source-strip code {
+  color: var(--mcu-green);
+  font-family: Consolas, "Cascadia Code", monospace;
+}
+
+.mcu-access {
+  color: var(--mcu-cyan);
+  white-space: nowrap;
+  font-family: Consolas, monospace;
+  font-size: 11px;
+}
+
+.mcu-code-block {
+  overflow: hidden;
+  border-color: rgba(102, 255, 189, .38);
+}
+
+.mcu-code-head {
+  display: flex;
+  justify-content: space-between;
+  padding: 9px 12px;
+  color: #091126;
+  background: linear-gradient(90deg, var(--mcu-green), var(--mcu-cyan));
+  font-size: 9px;
+}
+
+.mcu-code-block pre {
+  margin: 0;
+  padding: 15px;
+  overflow: auto;
+  color: #d8fff0;
+  background: rgba(2, 7, 22, .94);
+  font: 12px/1.58 Consolas, "Cascadia Code", monospace;
+  tab-size: 2;
+}
+
+.mcu-danger-block {
+  border-color: rgba(255, 91, 200, .4);
+}
+
+.mcu-verify-block {
+  border-color: rgba(102, 255, 189, .38);
+}
+
+.mcu-source-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  align-items: center;
+  padding: 10px 12px;
+}
+
+.mcu-source-strip code {
+  padding: 4px 7px;
+  border: 1px solid rgba(102, 255, 189, .24);
+  border-radius: 4px;
+  background: rgba(102, 255, 189, .06);
+  font-size: 10px;
+}
+
+.mcu-neon-toolbar {
+  min-width: 650px;
+}
+
+body:has(#planetInfoCard[data-mcu-mode="course-roadmap"][style*="display: block"]) .mcu-neon-toolbar,
+body:has(#planetInfoCard[data-mcu-mode="course-lesson"][style*="display: block"]) .mcu-neon-toolbar,
+body:has(#planetInfoCard[data-mcu-mode="planet-library"][style*="display: block"]) .mcu-neon-toolbar,
+body:has(#planetInfoCard[data-mcu-mode="planet-topic"][style*="display: block"]) .mcu-neon-toolbar {
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -18px);
+}
+
+.mcu-toolbar-actions .course-start-button,
+#courseBeginBtn,
+#planetFirstTopicBtn {
+  color: #071122;
+  background: linear-gradient(100deg, var(--mcu-green), var(--mcu-cyan));
+  border-color: #d9ffff;
+  box-shadow: 0 0 18px rgba(101, 247, 255, .24);
+}
+
+.info .follow-sun-btn + .follow-sun-btn {
+  margin-top: 6px;
+}
+
+#planetInfoCard[data-mcu-mode="course-roadmap"],
+#planetInfoCard[data-mcu-mode="course-lesson"],
+#planetInfoCard[data-mcu-mode="planet-library"],
+#planetInfoCard[data-mcu-mode="planet-topic"] {
+  width: min(1080px, calc(100vw - 34px));
+  max-width: 1080px;
+}
+
+.course-roadmap,
+.course-lesson {
+  display: grid;
+  gap: 13px;
+  color: #dbe7ff;
+}
+
+.course-intro {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 18px;
+  border: 1px solid rgba(255, 91, 200, .52);
+  border-radius: 9px;
+  background:
+    radial-gradient(circle at 90% 20%, rgba(101, 247, 255, .16), transparent 35%),
+    linear-gradient(125deg, rgba(33, 18, 73, .96), rgba(8, 16, 44, .96));
+}
+
+.course-intro > div {
+  flex: 1;
+}
+
+.course-intro h3,
+.course-outcome h3 {
+  margin: 6px 0;
+  color: #fff;
+  font: 700 19px/1.35 "Orbitron", monospace;
+}
+
+.course-intro p {
+  margin: 0;
+  color: #bfccec;
+  line-height: 1.45;
+}
+
+#courseBeginBtn,
+#planetFirstTopicBtn {
+  flex: 0 0 auto;
+  padding: 12px 16px;
+  border: 1px solid #e9ffff;
+  border-radius: 6px;
+  font: 800 10px "Orbitron", monospace;
+  cursor: pointer;
+}
+
+.course-readiness-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.course-readiness-grid ul,
+.course-lesson ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.course-readiness-grid li,
+.course-lesson li {
+  margin-bottom: 6px;
+  line-height: 1.42;
+}
+
+.course-readiness-grid li::marker,
+.course-lesson li::marker {
+  color: var(--mcu-pink);
+}
+
+.course-sequence-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 12px;
+  border-left: 3px solid var(--mcu-green);
+  color: #aebddd;
+  background: rgba(102, 255, 189, .07);
+  font: 700 9px "Orbitron", monospace;
+}
+
+.course-sequence-label span {
+  color: var(--mcu-green);
+}
+
+.course-module-list {
+  display: grid;
+  gap: 7px;
+}
+
+.course-module-card {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) 94px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(101, 247, 255, .24);
+  border-radius: 7px;
+  color: #dfeaff;
+  text-align: left;
+  background: linear-gradient(100deg, rgba(10, 16, 45, .94), rgba(19, 14, 52, .94));
+  cursor: pointer;
+  transition: .18s ease;
+}
+
+.course-module-card:hover,
+.course-module-card.is-next {
+  transform: translateX(4px);
+  border-color: var(--mcu-pink);
+  box-shadow: 0 0 20px rgba(255, 91, 200, .14);
+}
+
+.course-module-card.is-complete {
+  border-color: rgba(102, 255, 189, .45);
+  background: linear-gradient(100deg, rgba(11, 48, 48, .84), rgba(15, 23, 51, .92));
+}
+
+.course-module-number {
+  color: var(--mcu-cyan);
+  font: 900 21px "Orbitron", monospace;
+  text-align: center;
+}
+
+.course-module-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.course-module-copy strong {
+  color: #fff;
+  font: 700 11px "Orbitron", monospace;
+}
+
+.course-module-copy small {
+  color: #aebddd;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.planet-topic-card .course-module-copy em {
+  overflow: hidden;
+  color: #67f5d1;
+  font: normal 9px/1.35 "JetBrains Mono", monospace;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.planet-library .course-intro {
+  border-color: rgba(102, 255, 189, .48);
+  background:
+    radial-gradient(circle at 88% 20%, rgba(255, 91, 200, .16), transparent 34%),
+    linear-gradient(125deg, rgba(8, 38, 51, .97), rgba(18, 12, 52, .96));
+}
+
+.course-module-meta {
+  color: var(--mcu-pink);
+  font: 700 9px "Orbitron", monospace;
+  text-align: right;
+}
+
+.course-module-card.is-complete .course-module-meta {
+  color: var(--mcu-green);
+}
+
+.course-phase-list {
+  display: grid;
+  gap: 18px;
+}
+
+.course-phase {
+  padding: 12px;
+  border: 1px solid rgba(101, 247, 255, .18);
+  border-radius: 10px;
+  background: rgba(5, 10, 31, .6);
+  scroll-margin-top: 18px;
+}
+
+.course-phase.is-focused {
+  border-color: rgba(255, 91, 200, .72);
+  box-shadow: 0 0 30px rgba(255, 91, 200, .14), inset 0 0 22px rgba(101, 247, 255, .05);
+}
+
+.course-phase-header {
+  display: grid;
+  grid-template-columns: 86px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  padding: 8px 5px 12px;
+  border-bottom: 1px solid rgba(101, 247, 255, .17);
+}
+
+.course-phase-number {
+  color: var(--mcu-pink);
+  font: 800 9px "Orbitron", monospace;
+}
+
+.course-phase-header h4 {
+  margin: 0 0 3px;
+  color: #f4f8ff;
+  font: 800 12px "Orbitron", monospace;
+}
+
+.course-phase-header p {
+  margin: 0;
+  color: #8395ba;
+  font: 700 8px "Orbitron", monospace;
+}
+
+.course-phase-header > b {
+  color: var(--mcu-green);
+  font: 800 10px "Orbitron", monospace;
+}
+
+.course-stagebar {
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .1);
+}
+
+.course-stagebar span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--mcu-pink), var(--mcu-violet), var(--mcu-cyan));
+  box-shadow: 0 0 12px var(--mcu-cyan);
+}
+
+.course-outcome {
+  padding: 15px 17px;
+  border: 1px solid rgba(102, 255, 189, .4);
+  border-radius: 8px;
+  background: linear-gradient(120deg, rgba(9, 43, 46, .7), rgba(14, 14, 49, .9));
+}
+
+.course-outcome h3 {
+  font-size: 15px;
+}
+
+.course-file-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.course-file-table td {
+  padding: 7px 5px;
+  border-bottom: 1px solid rgba(101, 247, 255, .13);
+  vertical-align: top;
+}
+
+.course-file-table code {
+  color: var(--mcu-green);
+  overflow-wrap: anywhere;
+}
+
+.course-wide-block {
+  overflow: hidden;
+}
+
+.course-rich-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 10.5px;
+  line-height: 1.4;
+}
+
+.course-rich-table th {
+  padding: 8px;
+  color: var(--mcu-cyan);
+  border-bottom: 1px solid rgba(101, 247, 255, .34);
+  text-align: left;
+  font: 700 8px "Orbitron", monospace;
+}
+
+.course-rich-table td {
+  padding: 9px 8px;
+  border-bottom: 1px solid rgba(101, 247, 255, .11);
+  color: #ccd8ef;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.course-rich-table td:first-child {
+  color: #fff;
+  font-weight: 700;
+}
+
+.course-rich-table code {
+  color: var(--mcu-green);
+  white-space: normal;
+}
+
+.course-dependency-flow {
+  display: flex;
+  align-items: stretch;
+  gap: 7px;
+  overflow-x: auto;
+  padding: 3px 1px 8px;
+}
+
+.course-dependency-flow span {
+  min-width: 122px;
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 7px;
+  align-items: center;
+  padding: 9px;
+  border: 1px solid rgba(101, 247, 255, .24);
+  border-radius: 6px;
+  color: #d9e5ff;
+  background: rgba(10, 20, 52, .82);
+  font-size: 10px;
+}
+
+.course-dependency-flow span b {
+  color: var(--mcu-pink);
+  font: 800 9px "Orbitron", monospace;
+}
+
+.course-dependency-flow i {
+  align-self: center;
+  color: var(--mcu-cyan);
+  font-style: normal;
+}
+
+.mcu-code-head button {
+  padding: 3px 9px;
+  border: 1px solid rgba(5, 20, 32, .45);
+  border-radius: 4px;
+  color: #071122;
+  background: rgba(255, 255, 255, .42);
+  font: 800 8px "Orbitron", monospace;
+  cursor: pointer;
+}
+
+.course-task-block {
+  border-color: rgba(255, 91, 200, .35);
+}
+
+.course-pass-block {
+  border-color: rgba(102, 255, 189, .4);
+}
+
+.course-checks {
+  display: grid;
+  gap: 7px;
+}
+
+.course-check {
+  display: grid;
+  grid-template-columns: 16px 1fr;
+  gap: 8px;
+  align-items: start;
+  line-height: 1.35;
+}
+
+.course-check input {
+  accent-color: var(--mcu-green);
+}
+
+.course-reveal {
+  border: 1px solid rgba(101, 247, 255, .25);
+  border-radius: 7px;
+  background: rgba(7, 12, 38, .88);
+}
+
+.course-reveal summary {
+  padding: 11px 13px;
+  color: var(--mcu-cyan);
+  font: 700 9px "Orbitron", monospace;
+  cursor: pointer;
+}
+
+.course-reveal ul,
+.course-reveal pre {
+  margin: 0 13px 13px;
+  padding: 12px 14px;
+  border-radius: 5px;
+  color: #dce7ff;
+  background: rgba(2, 7, 22, .82);
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.course-solution {
+  border-color: rgba(255, 91, 200, .32);
+}
+
+.course-solution summary {
+  color: #ff9de0;
+}
+
+.course-navigation {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.4fr 1fr;
+  gap: 7px;
+  padding: 9px;
+  border: 1px solid rgba(101, 247, 255, .35);
+  border-radius: 8px;
+  background: rgba(5, 9, 29, .96);
+  backdrop-filter: blur(14px);
+}
+
+.course-navigation button {
+  padding: 9px 8px;
+  border: 1px solid rgba(101, 247, 255, .35);
+  border-radius: 5px;
+  color: #eaf8ff;
+  background: rgba(30, 28, 75, .9);
+  font: 700 8px "Orbitron", monospace;
+  cursor: pointer;
+}
+
+.course-navigation button:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+}
+
+.course-navigation .course-complete-btn {
+  color: #071122;
+  border-color: var(--mcu-green);
+  background: linear-gradient(100deg, var(--mcu-green), var(--mcu-cyan));
+}
+
+.course-navigation .course-complete-btn.is-complete {
+  color: var(--mcu-green);
+  background: rgba(19, 72, 62, .85);
+}
+
+/* ARIS readability layer: calm blue/teal surfaces and Vietnamese-friendly type. */
+body.mcu-neon-theme,
+.mcu-neon-theme button,
+.mcu-neon-theme input,
+.mcu-neon-theme .controls,
+.mcu-neon-theme .celestial-panel,
+.mcu-neon-theme .planet-info-card,
+.mcu-neon-toolbar {
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+}
+
+.mcu-neon-theme .control-header h3,
+.mcu-neon-theme .celestial-header h4,
+.mcu-neon-theme .planet-info-title,
+.mcu-neon-theme .info-section h4,
+.mcu-neon-theme .planet-item strong,
+.mcu-neon-theme .planet-label,
+.mcu-neon-theme .category-header,
+.mcu-brand-mark,
+.course-intro h3,
+.course-outcome h3,
+.course-module-copy strong,
+.course-phase-header h4,
+.mcu-lesson-block h5,
+.mcu-kicker,
+.course-sequence-label,
+.course-navigation button {
+  font-family: "Space Grotesk", Inter, "Segoe UI", sans-serif !important;
+  letter-spacing: .15px;
+}
+
+.mcu-neon-theme .planet-label {
+  padding: 5px 9px;
+  color: #f8fafc;
+  background: rgba(8, 28, 47, .94);
+  border-color: rgba(125, 211, 252, .58);
+  font-size: 11px;
+  font-weight: 700;
+  text-shadow: none;
+}
+
+.mcu-neon-theme code,
+.mcu-neon-theme pre,
+.planet-topic-card .course-module-copy em {
+  font-family: "Cascadia Code", Consolas, monospace !important;
+}
+
+.mcu-neon-theme .controls,
+.mcu-neon-theme .celestial-panel,
+.mcu-neon-theme .info,
+.mcu-neon-theme .planet-info-card {
+  color: #e5edf7;
+  background: linear-gradient(145deg, rgba(9, 20, 37, .97), rgba(5, 12, 25, .96));
+  border-color: rgba(125, 211, 252, .4);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .52), 0 0 0 1px rgba(148, 163, 184, .08) inset;
+}
+
+.mcu-neon-theme .control-header h3,
+.mcu-neon-theme .celestial-header h4,
+.mcu-neon-theme .planet-info-title {
+  text-shadow: none;
+}
+
+.mcu-neon-toolbar {
+  color: #f8fafc;
+  background: linear-gradient(115deg, rgba(8, 24, 39, .97), rgba(12, 33, 66, .96));
+  border-color: rgba(125, 211, 252, .48);
+  box-shadow: 0 14px 42px rgba(0, 0, 0, .48), 0 0 20px rgba(56, 189, 248, .08);
+}
+
+.mcu-brand-mark {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.mcu-brand-mark span,
+.aris-info-brand {
+  color: #fbbf24;
+  font-family: "Space Grotesk", Inter, sans-serif;
+  font-weight: 700;
+}
+
+.mcu-brand-mark small {
+  color: #7dd3fc;
+}
+
+.course-intro,
+.planet-library .course-intro {
+  border-color: rgba(125, 211, 252, .42);
+  background:
+    radial-gradient(circle at 90% 15%, rgba(52, 211, 153, .12), transparent 35%),
+    linear-gradient(125deg, rgba(8, 35, 49, .98), rgba(12, 27, 59, .97));
+}
+
+.course-module-card {
+  border-color: rgba(125, 211, 252, .25);
+  color: #e5edf7;
+  background: linear-gradient(100deg, rgba(9, 25, 43, .96), rgba(14, 27, 55, .95));
+}
+
+.course-module-card:hover,
+.course-module-card.is-next {
+  border-color: #fbbf24;
+  box-shadow: 0 0 0 1px rgba(251, 191, 36, .16), 0 10px 30px rgba(0, 0, 0, .25);
+}
+
+.course-module-copy strong {
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.course-module-copy small,
+.course-intro p,
+.mcu-lesson-block,
+.planet-description {
+  color: #cbd5e1;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.course-module-number {
+  color: #7dd3fc;
+}
+
+.course-module-meta,
+.mcu-level-chip {
+  color: #fbbf24;
+  border-color: rgba(251, 191, 36, .52);
+}
+
+.mcu-neon-theme canvas {
+  cursor: crosshair;
+}
+
+.communication-domain-map {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid rgba(52, 211, 153, .3);
+  border-radius: 9px;
+  background: linear-gradient(120deg, rgba(6, 47, 47, .48), rgba(12, 27, 59, .62));
+}
+
+.communication-map-head,
+.course-theory-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #7dd3fc;
+  font: 700 11px/1.3 "Space Grotesk", Inter, sans-serif;
+}
+
+.communication-map-head b,
+.course-theory-heading b {
+  color: #fbbf24;
+  font-size: 9px;
+}
+
+.communication-map-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.communication-map-grid article {
+  min-height: 112px;
+  padding: 11px;
+  border: 1px solid rgba(125, 211, 252, .22);
+  border-radius: 7px;
+  background: rgba(7, 17, 32, .72);
+}
+
+.communication-map-grid strong {
+  color: #f8fafc;
+  font: 700 11px/1.35 "Space Grotesk", Inter, sans-serif;
+}
+
+.communication-map-grid p {
+  margin: 7px 0 0;
+  color: #b9c8da;
+  font-size: 11px;
+  line-height: 1.48;
+}
+
+.course-theory-block {
+  border-color: rgba(52, 211, 153, .34);
+  background: linear-gradient(125deg, rgba(6, 39, 43, .48), rgba(9, 20, 40, .8));
+}
+
+.course-theory-heading {
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(125, 211, 252, .16);
+}
+
+.course-theory-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+  margin-top: 11px;
+}
+
+.course-theory-grid article {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(125, 211, 252, .2);
+  border-radius: 7px;
+  background: rgba(5, 14, 29, .72);
+}
+
+.course-theory-grid article > span {
+  color: #34d399;
+  font: 700 15px "Space Grotesk", Inter, sans-serif;
+}
+
+.course-theory-grid h6 {
+  margin: 0 0 6px;
+  color: #f8fafc;
+  font: 700 12px/1.4 "Space Grotesk", Inter, sans-serif;
+}
+
+.course-theory-grid p {
+  margin: 0;
+  color: #c3d0df;
+  font-size: 12px;
+  line-height: 1.62;
+}
+
+@media (max-width: 900px) {
+  .mcu-neon-toolbar {
+    min-width: 0;
+    width: calc(100vw - 30px);
+  }
+
+  .mcu-lesson-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .course-readiness-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .communication-map-grid,
+  .course-theory-grid {
+    grid-template-columns: 1fr;
+  }
+}
