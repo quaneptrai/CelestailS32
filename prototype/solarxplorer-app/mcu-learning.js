@@ -1,4 +1,6 @@
 import { bareMetalCourse } from "./driver-course-v2.js";
+import { deepLectureNotes, sourceGuideFor } from "./lecture-notes-v3.js";
+import { explainConcept } from "./concept-guide-v4.js";
 
 const domains = {
   Mercury: {
@@ -957,6 +959,15 @@ function renderCourseRoadmap(focusPhase = courseRoadmapFocus) {
 
   const entryList = bareMetalCourse.entry.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
   const rulesList = bareMetalCourse.rules.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+  const normalizeSearchText = (value) => String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const moduleSearchIndex = modules.map((module) => {
+    const note = deepLectureNotes[module.id] || {};
+    const explainedConcepts = (module.concepts || []).flatMap((concept) => {
+      const explanation = explainConcept(module, concept);
+      return [concept, explanation.plain, explanation.mechanism, explanation.source, explanation.search];
+    });
+    return normalizeSearchText(JSON.stringify([module, note, sourceGuideFor(module), explainedConcepts]));
+  });
   const phaseSections = bareMetalCourse.phases.map((phase) => {
     const phaseModules = modules
       .map((module, index) => ({ module, index }))
@@ -990,6 +1001,7 @@ function renderCourseRoadmap(focusPhase = courseRoadmapFocus) {
       <section class="mcu-lesson-block"><h5>ĐIỀU KIỆN BẮT ĐẦU</h5><ul>${entryList}</ul></section>
       <section class="mcu-lesson-block"><h5>LUẬT HỌC DRIVER</h5><ul>${rulesList}</ul></section>
     </div>
+    <section class="course-search-panel"><label for="courseSearchInput"><span>TÌM TRONG TOÀN BỘ 33 BÀI</span><b>KHÁI NIỆM · REGISTER · LỖI · TỪ KHÓA PDF</b></label><div><input id="courseSearchInput" type="search" placeholder="Ví dụ: PCC, W1C, PDIR, debounce, COCO, TRGMUX, ACKERR..." autocomplete="off"><button id="courseSearchClear" type="button">XÓA</button></div><p id="courseSearchResult">Đang hiển thị ${modules.length}/${modules.length} bài.</p></section>
     <div class="course-sequence-label"><span>ROADMAP TỔNG QUAN</span><b>00 → 32 · FOUNDATION + GPIO + ADC + FLEXCAN/CAN NETWORK</b></div>
     <div class="course-phase-list">${phaseSections}</div>
   </article>`;
@@ -1005,6 +1017,28 @@ function renderCourseRoadmap(focusPhase = courseRoadmapFocus) {
     event.stopPropagation();
     renderCourseLesson(nextIndex, planetForModule(modules[nextIndex]));
   });
+  const searchInput = document.getElementById("courseSearchInput");
+  const applyCourseSearch = () => {
+    const query = normalizeSearchText(searchInput?.value.trim());
+    let visibleCount = 0;
+    container.querySelectorAll("[data-course-index]").forEach((button) => {
+      const index = Number(button.dataset.courseIndex);
+      const visible = !query || moduleSearchIndex[index].includes(query);
+      button.hidden = !visible;
+      if (visible) visibleCount += 1;
+    });
+    container.querySelectorAll(".course-phase").forEach((phaseElement) => {
+      phaseElement.hidden = ![...phaseElement.querySelectorAll("[data-course-index]")].some((button) => !button.hidden);
+    });
+    const result = document.getElementById("courseSearchResult");
+    if (result) result.textContent = query ? `Tìm thấy ${visibleCount}/${modules.length} bài. Nhấn bài để đọc giải thích và source locator.` : `Đang hiển thị ${modules.length}/${modules.length} bài.`;
+  };
+  searchInput?.addEventListener("input", applyCourseSearch);
+  document.getElementById("courseSearchClear")?.addEventListener("click", () => {
+    if (searchInput) searchInput.value = "";
+    applyCourseSearch();
+    searchInput?.focus();
+  });
   if (focusPhase) {
     requestAnimationFrame(() => container.querySelector(`[data-course-phase="${focusPhase}"]`)?.scrollIntoView({ block: "start" }));
   }
@@ -1014,6 +1048,7 @@ function renderCourseLesson(index, planetName = null) {
   const modules = bareMetalCourse.modules;
   const safeIndex = Math.min(Math.max(index, 0), modules.length - 1);
   const module = modules[safeIndex];
+  const lectureNote = deepLectureNotes[module.id] || { intro: "", theory: [], example: "" };
   const phase = bareMetalCourse.phases.find((item) => item.id === module.phase);
   const topicPlanet = planetName || planetForModule(module);
   const planetEntries = moduleIndexesForPlanet(topicPlanet);
@@ -1048,7 +1083,17 @@ function renderCourseLesson(index, planetName = null) {
   const fileRows = module.files.map(([name, role]) => `<tr><td><code>${escapeHtml(name)}</code></td><td>${escapeHtml(role)}</td></tr>`).join("");
   const sourceRows = module.sourceTrail.map(([fact, source, result]) => `<tr><td>${escapeHtml(fact)}</td><td><code>${escapeHtml(source)}</code></td><td>${escapeHtml(result)}</td></tr>`).join("");
   const registerRows = module.registers.map(([name, access, purpose, caution]) => `<tr><td><code>${escapeHtml(name)}</code></td><td><span class="mcu-access">${escapeHtml(access)}</span></td><td>${escapeHtml(purpose)}</td><td>${escapeHtml(caution || "")}</td></tr>`).join("");
-  const theory = module.theory.length ? `<section class="mcu-lesson-block course-wide-block course-theory-block"><div class="course-theory-heading"><span>GIẢI THÍCH KHÁI NIỆM</span><b>ĐỌC TRƯỚC KHI VIẾT REGISTER</b></div><div class="course-theory-grid">${module.theory.map(([title, body], theoryIndex) => `<article><span>${String(theoryIndex + 1).padStart(2, "0")}</span><div><h6>${escapeHtml(title)}</h6><p>${escapeHtml(body)}</p></div></article>`).join("")}</div></section>` : "";
+  const theoryItems = [...(lectureNote.theory || []), ...(module.theory || [])];
+  const conceptSeeds = module.concepts.length ? module.concepts : theoryItems.map(([title]) => title);
+  const conceptGuide = conceptSeeds.map((concept, conceptIndex) => {
+    const explanation = explainConcept(module, concept);
+    return `<article class="course-concept-card"><header><span>${String(conceptIndex + 1).padStart(2, "0")}</span><h6>${escapeHtml(concept)}</h6></header><div class="course-concept-body"><section><b>NEWBIE #101</b><p>${escapeHtml(explanation.plain)}</p></section><section><b>CƠ CHẾ KỸ THUẬT</b><p>${escapeHtml(explanation.mechanism)}</p></section></div><footer><span><b>NGUỒN:</b> ${escapeHtml(explanation.source)}</span><code>PDF SEARCH: ${escapeHtml(explanation.search)}</code></footer></article>`;
+  }).join("");
+  const theory = theoryItems.length ? `<section id="lessonTheory" class="mcu-lesson-block course-wide-block course-theory-block"><div class="course-theory-heading"><span>GIẢI THÍCH KHÁI NIỆM</span><b>ĐỌC TRƯỚC KHI VIẾT REGISTER</b></div><div class="course-theory-grid">${theoryItems.map(([title, body], theoryIndex) => `<article><span>${String(theoryIndex + 1).padStart(2, "0")}</span><div><h6>${escapeHtml(title)}</h6><p>${escapeHtml(body)}</p></div></article>`).join("")}</div></section>` : "";
+  const documentRows = sourceGuideFor(module).map(([documentName, locator, role, limitation]) => `<tr><td><strong>${escapeHtml(documentName)}</strong><small>${escapeHtml(locator)}</small></td><td>${escapeHtml(role)}</td><td>${escapeHtml(limitation)}</td></tr>`).join("");
+  const documentGuide = `<section id="lessonSources" class="mcu-lesson-block course-wide-block course-document-guide"><div class="course-document-heading"><span>4 TÀI LIỆU GỐC + FPT_MCU</span><b>NGUỒN NÀO CÓ QUYỀN KẾT LUẬN GÌ?</b></div><p class="course-document-lead">Không đọc các PDF theo chiều từ trang đầu tới cuối. Với mỗi quyết định trong driver, chọn đúng tài liệu có thẩm quyền rồi ghi lại chapter/page làm bằng chứng. Bộ FPT_MCU giúp học và xem ví dụ, nhưng không thay thế RM, Datasheet, schematic hoặc ARM ARM.</p><div class="course-table-scroll"><table class="course-rich-table course-document-table"><thead><tr><th>Tài liệu / vị trí</th><th>Dùng tài liệu này để trả lời</th><th>Không được suy luận quá phạm vi</th></tr></thead><tbody>${documentRows}</tbody></table></div></section>`;
+  const beginnerIntro = lectureNote.intro ? `<section id="lessonStart" class="mcu-lesson-block course-wide-block course-beginner-intro"><span class="mcu-kicker">BẮT ĐẦU TỪ SỐ 0</span><h4>Trước tiên, hãy hiểu bài này đang giải quyết điều gì</h4><p>${escapeHtml(lectureNote.intro)}</p></section>` : "";
+  const workedExample = lectureNote.example ? `<section id="lessonExample" class="mcu-lesson-block course-wide-block course-worked-example"><div><span>VÍ DỤ LÀM TỪNG BƯỚC</span><b>TỪ YÊU CẦU → REGISTER → KẾT QUẢ ĐO</b></div><p>${escapeHtml(lectureNote.example)}</p></section>` : "";
   const checks = module.checks.map((item) => `<label class="course-check"><input type="checkbox"><span>${escapeHtml(item)}</span></label>`).join("");
   const prerequisites = module.prerequisites.length ? `<section class="mcu-lesson-block"><h5>PREREQUISITE</h5>${unordered(module.prerequisites)}</section>` : "";
   const files = fileRows ? `<section class="mcu-lesson-block"><h5>FILE SẼ TẠO / SỬA</h5><table class="course-file-table"><tbody>${fileRows}</tbody></table></section>` : "";
@@ -1058,14 +1103,17 @@ function renderCourseLesson(index, planetName = null) {
 
   container.innerHTML = `<article class="course-lesson">
     <div class="course-stagebar"><span style="width:${((localIndex + 1) / planetEntries.length) * 100}%"></span></div>
+    <nav class="course-lecture-nav" aria-label="Các phần của bài giảng"><a href="#lessonStart">TỪ SỐ 0</a><a href="#lessonSources">NGUỒN</a><a href="#lessonTheory">CƠ CHẾ</a><a href="#lessonExample">VÍ DỤ</a><span>REGISTER</span><span>THỰC HÀNH</span><span>DEBUG</span></nav>
     <section class="course-outcome"><span class="mcu-kicker">SẢN PHẨM BẮT BUỘC</span><h3>${escapeHtml(module.outcome)}</h3></section>
-    <div class="mcu-lesson-grid">
-      <section class="mcu-lesson-block"><h5>KHÁI NIỆM CẦN HIỂU</h5>${unordered(module.concepts)}</section>
-      ${prerequisites || files || `<section class="mcu-lesson-block"><h5>PHẠM VI</h5><p>Hoàn thành đúng artifact và pass checks của bài này trước khi sang bài tiếp theo.</p></section>`}
-    </div>
+    ${beginnerIntro}
+    <section class="mcu-lesson-block course-wide-block course-concept-guide"><div class="course-concept-heading"><span>TỪ ĐIỂN KHÁI NIỆM CỦA BÀI</span><b>KHÔNG HỌC THUỘC TÊN REGISTER</b></div><p>Mỗi mục dưới đây trả lời bốn câu hỏi: nó có nghĩa gì với người mới, phần cứng thực hiện ra sao, lấy bằng chứng ở đâu và gõ từ khóa gì trong PDF.</p><div class="course-concept-list">${conceptGuide}</div></section>
     ${theory}
+    ${documentGuide}
+    <div class="mcu-lesson-grid">
+      ${prerequisites || files || `<section class="mcu-lesson-block"><h5>CÁCH HỌC BÀI NÀY</h5><p>Bắt đầu bằng khái niệm và đường tín hiệu, sau đó mới tra register, viết code và đo bằng chứng. Không cần biết trước peripheral; mỗi bước phía dưới cho biết phải tìm gì và kiểm tra ra sao.</p></section>`}
+    </div>
     ${files && prerequisites ? `<div class="mcu-lesson-grid">${files}${prerequisites}</div>` : files && !prerequisites ? files : ""}
-    ${sources}${dependencies}${registers}
+    ${sources}${dependencies}${registers}${workedExample}
     <section class="mcu-lesson-block course-wide-block"><h5>LÀM THEO ĐÚNG THỨ TỰ</h5>${ordered(module.steps)}</section>
     <section class="mcu-code-block"><div class="mcu-code-head"><span>STARTER / TODO</span><button id="copyCourseCode" type="button">COPY</button></div><pre><code>${escapeHtml(module.starter)}</code></pre></section>
     <div class="mcu-lesson-grid">
@@ -1246,7 +1294,7 @@ function adaptStaticUI() {
   if (info) info.innerHTML = `<strong class="aris-info-brand">ARIS · EMBEDDED DRIVER SCHOOL</strong><br>▶ 33 bài theo đúng thứ tự<br>◉ Tự viết GPIO + ADC + FlexCAN từ file trắng<br>△ Mặt Trời roadmap · hành tinh chứa topic chi tiết<br>▣ RM + Datasheet + Schematic + code audit<br>↯ TODO + Pass checks + đáp án<br>⌁ Lưu tiến độ trên máy<br><button id="startCourseAdapter" class="follow-sun-btn">▶ BẮT ĐẦU TỪ SỐ 0</button>`;
   document.getElementById("startCourseAdapter")?.addEventListener("click", () => renderCourseRoadmap(null));
 
-  document.querySelector(".nasa-footer .footer-content").innerHTML = `ARIS · S32K144 LEARNING UNIVERSE · <a href="https://github.com/SoumyaEXE/3d-Solar-System-ThreeJS" target="_blank" rel="noopener noreferrer">SolarXplorer MIT source</a>`;
+  document.querySelector(".nasa-footer .footer-content").textContent = "ARIS · S32K144 INTERNAL LEARNING UNIVERSE";
   installNeonToolbar();
   installUniverseOnlyMode();
 }
@@ -1304,3 +1352,4 @@ if (document.readyState !== "loading") setTimeout(adaptStaticUI, 0);
 
 window.MCU_DOMAINS = domains;
 window.MCU_COURSE = bareMetalCourse;
+window.MCU_LECTURES = deepLectureNotes;

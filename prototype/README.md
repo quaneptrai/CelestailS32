@@ -1,6 +1,6 @@
-# S32K144 SolarXplorer prototype
+# ARIS S32K144 learning prototype
 
-Runtime đang dùng nằm tại `prototype/solarxplorer-app`. Đây là scene Three.js từ dự án MIT `SoumyaEXE/3d-Solar-System-ThreeJS`, giữ texture, chuyển động, camera, bloom và hệ điều khiển 3D. Lớp `mcu-learning.js` cung cấp nội dung/logic S32K144; `mcu-learning.css` dùng theme S32K://Neon Academy. Chatbot/Gemini và nhạc đã được gỡ hoàn toàn khỏi runtime.
+Runtime đang dùng nằm tại `prototype/solarxplorer-app`. Scene Three.js cung cấp texture, chuyển động, camera, bloom và hệ điều khiển 3D. Lớp `mcu-learning.js` cung cấp nội dung/logic S32K144; `mcu-learning.css` dùng theme ARIS. Chatbot và nhạc đã được gỡ hoàn toàn khỏi runtime.
 
 Prototype cũ tự dựng vẫn được giữ trong `prototype/` để đối chiếu, nhưng không còn là entry mặc định.
 

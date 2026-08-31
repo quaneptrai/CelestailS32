@@ -5,6 +5,9 @@
 ## Nội dung hiện có
 
 - 33 bài theo lộ trình từ đọc tài liệu đến tự viết driver.
+- Lecture V4 cho từng topic: bắt đầu từ số 0, 144 thẻ `NEWBIE #101`, cơ chế S32K144, register/signal flow, ví dụ tính toán, source locator, từ khóa PDF, debug và pass criteria.
+- Tìm kiếm toàn văn 33 bài theo khái niệm, register, lỗi và từ khóa tài liệu.
+- Mỗi bài có ma trận bốn tài liệu gốc và nguồn học bổ sung FPT_MCU, nêu rõ tài liệu nào được phép kết luận loại fact nào.
 - Earth: GPIO/PORT driver từ schematic đến interrupt.
 - Mars: ADC driver, clock, calibration và conversion.
 - Saturn: Communication domain.
@@ -45,4 +48,4 @@ DRIVER_SCHOOL_V2_VISUAL_SMOKE_OK
 
 Nội dung được đối chiếu với S32K1xx Reference Manual, S32K1xx Datasheet, schematic S32K144EVB và ARMv7-M Architecture Reference Manual. Các PDF nguồn không nằm trong repository và được loại bằng `.gitignore`.
 
-UI vũ trụ dựa trên mã nguồn MIT của [SoumyaEXE/3d-Solar-System-ThreeJS](https://github.com/SoumyaEXE/3d-Solar-System-ThreeJS). License upstream được giữ trong thư mục prototype.
+Bộ `D:\Downloads\FPT_MCU-20260718T013706Z-1-001\FPT_MCU` được dùng như lecture companion cho EVB, Cortex-M4, NVIC/CMSIS, ADC, timer, UART và I2C. Đây là nguồn bổ sung; register semantics và board wiring vẫn theo bốn tài liệu gốc. Xem `docs/FPT_MCU_REFERENCE_MAP.md`.

@@ -1,6 +1,6 @@
 # ARIS · S32K144 Learning Universe
 
-Desktop-first Three.js learning prototype for the S32K144. The complete visual engine, textures, orbit system and core controls are based on the MIT-licensed [SoumyaEXE/3d-Solar-System-ThreeJS](https://github.com/SoumyaEXE/3d-Solar-System-ThreeJS). The MCU learning layer lives in `mcu-learning.js` and `mcu-learning.css`.
+Desktop-first Three.js learning prototype for the S32K144. The MCU learning layer lives in `mcu-learning.js` and `mcu-learning.css`.
 
 The active build contains no chatbot, Gemini integration or music runtime.
 
@@ -41,4 +41,4 @@ The output is the `dist/` directory created by `npm run build`. No server-side r
 
 ## License and attribution
 
-The upstream `LICENSE` is retained in this directory. MCU-specific adapter code and learning content are project additions.
+Third-party license notices required by the runtime are retained in the repository. MCU-specific adapter code and learning content are project additions.

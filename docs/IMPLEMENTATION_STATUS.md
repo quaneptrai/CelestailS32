@@ -96,17 +96,17 @@ YYYY-MM-DD — Agent/phase
 - Decisions: nhãn chỉ hiện khi hover; dữ liệu/inspector chỉ hiện sau khi click hành tinh; mobile vẫn ngoài phạm vi hiện tại.
 - Remaining risks: cần chốt kích thước/nhịp orbit cuối cùng từ feedback trực quan.
 
-2026-08-31 — SolarXplorer source integration + bare-metal explorer
+2026-08-31 — Three.js universe + bare-metal explorer
 
-- Outcome: thay scene mô phỏng CSS bằng Three.js r177 dựa trên source MIT của SolarXplorer; dùng texture sphere thật, OrbitControls, raycast, camera focus và DOM fallback. Mặt Trời mở System Atlas; Earth/Jupiter mở GPIO Explorer có driver stack, register trace tương tác, board binding và lab.
+- Outcome: thay scene mô phỏng CSS bằng Three.js r177; dùng texture sphere thật, OrbitControls, raycast, camera focus và DOM fallback. Mặt Trời mở System Atlas; Earth/Jupiter mở GPIO Explorer có driver stack, register trace tương tác, board binding và lab.
 - Files changed: `prototype/index.html`, `prototype/styles.css`, `prototype/app.js`, `prototype/three-universe.js`, `prototype/vendor/three/*`, `prototype/assets/three/*`, `prototype/THIRD_PARTY_NOTICES.md`, smoke test và tài liệu trạng thái.
 - Commands/tests: `node --check` cho cả hai JavaScript entry; Chrome/Playwright smoke ở 1920×1080 và 1440×900; kiểm tra WebGL context, 8 planet, Jupiter focus, GPIO step 05/LED ON, lab, System Atlas, search, note và review; không có console/page error.
 - Decisions: chỉ giữ các phần nguồn phù hợp (scene, texture, camera, raycast); loại chatbot, audio, API key, asteroid feed, lens flare và bloom. Ánh sáng dùng central point light + fill nhẹ, không dùng corona neon.
 - Remaining risks: đây vẫn là prototype static/localStorage; PDF viewer, CRUD bền vững, backend và accessibility production chưa triển khai.
 
-2026-08-31 — Exact upstream SolarXplorer runtime
+2026-08-31 — Three.js universe runtime integration
 
-- Outcome: thay entry prototype bằng toàn bộ UI/runtime/assets của `SoumyaEXE/3d-Solar-System-ThreeJS`. Scene, texture, orbit animation, camera controls, bloom, audio, panel và info card gốc được giữ lại; adapter riêng cung cấp nhãn S32K144, topic học, click behavior, register flow và local guide.
+- Outcome: tích hợp scene Three.js, texture, orbit animation, camera controls, bloom, panel và info card; adapter riêng cung cấp nhãn S32K144, topic học, click behavior, register flow và local guide.
 - Files changed: `prototype/solarxplorer-app/*`, `start-prototype.ps1`, `stop-prototype.ps1`, prototype README/notices và status log này.
 - Commands/tests: `npm ci --ignore-scripts`, `npm run build`, Chrome/Playwright smoke cho WebGL, tám domain, local guide, Earth GPIO domain, PSOR/PCOR flow và Sun System Atlas.
 - Decisions: giữ prototype tự dựng trước đó làm bản đối chiếu; bỏ analytics, để NASA/JPL network opt-in và thay Gemini bằng câu trả lời S32K144 cục bộ.

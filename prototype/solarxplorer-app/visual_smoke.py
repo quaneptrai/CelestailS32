@@ -45,6 +45,7 @@ def main() -> None:
         assert page.locator("#openGpioCourse").count() == 0
         assert page.evaluate("window.MCU_COURSE.modules.length") == 33
         assert page.evaluate("window.MCU_COURSE.phases.length") == 5
+        assert page.evaluate("Object.keys(window.MCU_LECTURES).length") == 33
         assert page.locator("#chatbotContainer").count() == 0
         assert page.locator("#spaceMusic").count() == 0
         assert page.title().startswith("ARIS")
@@ -79,6 +80,12 @@ def main() -> None:
         assert page.locator(".course-module-card").count() == 33
         assert page.locator('.course-module-card[data-course-index="0"] .course-module-number').inner_text() == "00"
         assert page.locator('.course-module-card[data-course-index="32"] .course-module-number').inner_text() == "32"
+        page.locator("#courseSearchInput").fill("ACKERR")
+        assert page.locator('.course-module-card[data-course-index="26"]').is_visible()
+        assert not page.locator('.course-module-card[data-course-index="6"]').is_visible()
+        assert "Tìm thấy" in page.locator("#courseSearchResult").inner_text()
+        page.locator("#courseSearchClear").click()
+        assert page.locator(".course-module-card:visible").count() == 33
         page.screenshot(path=OUTPUT / "driver-school-roadmap-33.png", full_page=True)
 
         page.locator('.course-module-card[data-course-index="6"]').click()
@@ -90,6 +97,14 @@ def main() -> None:
         assert page.locator(".course-pass-block").count() == 1
         assert page.locator(".course-reveal").count() == 2
         assert page.locator(".course-rich-table").count() >= 1
+        assert page.locator(".course-beginner-intro").count() == 1
+        assert page.locator(".course-concept-card").count() == 5
+        assert page.locator(".course-concept-card").first.locator("text=NEWBIE #101").count() == 1
+        assert "PDF SEARCH" in page.locator(".course-concept-card").first.inner_text()
+        assert "RM · Ch.29 PCC" in page.locator(".course-concept-guide").inner_text()
+        assert page.locator(".course-document-table tbody tr").count() == 5
+        assert "FPT_MCU" in page.locator(".course-document-guide").inner_text()
+        assert page.locator(".course-worked-example").count() == 1
         page.locator("#courseCompleteBtn").click()
         assert page.evaluate(
             "JSON.parse(localStorage.getItem('s32k144-driver-school-progress-v2')).includes('06')"
@@ -101,6 +116,15 @@ def main() -> None:
         assert page.locator('[data-planet-topic-index="6"]').evaluate(
             "element => element.classList.contains('is-complete')"
         )
+        page.locator('[data-planet-topic-index="12"]').click()
+        timing_text = page.locator(".course-lesson").inner_text()
+        assert "SYST_RVR" in timing_text
+        assert "79,999" in timing_text
+        assert "MOD" in timing_text
+        assert "CnV" in timing_text
+        assert "FPT_MCU" in timing_text
+        assert page.locator(".course-theory-grid article").count() >= 8
+        page.screenshot(path=OUTPUT / "systick-debounce-ftm-pwm-lecture-v3.png", full_page=True)
 
         page.evaluate(
             "window.dispatchEvent(new CustomEvent('solarxplorer:body-selected', {detail:{name:'Mars'}}))"
@@ -114,6 +138,22 @@ def main() -> None:
         assert "chip-specific" in adc_text
         assert "ADCH" in adc_text
         page.screenshot(path=OUTPUT / "adc-chip-specific-audit-module-15.png", full_page=True)
+
+        # The most complex ADC lesson must read as a complete lecture, not a terse checklist.
+        page.evaluate(
+            "window.dispatchEvent(new CustomEvent('solarxplorer:body-selected', {detail:{name:'Uranus'}}))"
+        )
+        page.locator('[data-planet-topic-index="24"]').click()
+        trigger_text = page.locator(".course-lesson").inner_text()
+        assert "10 kHz" in trigger_text
+        assert "25.6 ms" in trigger_text
+        assert "PDB0" in trigger_text
+        assert "TRGMUX" in trigger_text
+        assert "SIM_ADCOPT" in trigger_text
+        assert "DMAEN" in trigger_text
+        assert page.locator(".course-theory-grid article").count() >= 8
+        assert page.locator(".course-document-table tbody tr").count() == 5
+        page.screenshot(path=OUTPUT / "adc-pdb-trgmux-dma-lecture-v3.png", full_page=True)
 
         page.evaluate(
             "window.dispatchEvent(new CustomEvent('solarxplorer:body-selected', {detail:{name:'Earth'}}))"

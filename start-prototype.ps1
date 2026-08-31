@@ -54,7 +54,7 @@ if (-not $existingPrototype) {
     Set-Content -LiteralPath $pidFile -Value $server.Id -Encoding ascii
     Write-Host "Prototype server started (PID $($server.Id))." -ForegroundColor Green
 } else {
-    Write-Host "SolarXplorer prototype is already listening on port $port." -ForegroundColor Yellow
+    Write-Host "ARIS learning universe is already listening on port $port." -ForegroundColor Yellow
 }
 
 if (-not $NoOpen) {

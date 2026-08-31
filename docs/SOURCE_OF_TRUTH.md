@@ -34,6 +34,10 @@ Khi hai nguồn có vẻ khác nhau, quyết định theo loại fact:
 
 Sample code, SDK header và compiler header có thể hỗ trợ kiểm chứng tên/address, nhưng không là nguồn gốc duy nhất cho nội dung giải thích.
 
+### Nguồn học bổ sung FPT_MCU
+
+Thư mục local `D:\Downloads\FPT_MCU-20260718T013706Z-1-001\FPT_MCU` gồm 10 PDF về S32K144 EVB, quy trình embedded, Cortex-M4, exception/NVIC, CMSIS, ADC, timer, UART và I2C. Các file này được dùng để bổ sung cách giảng, ví dụ và workflow; chúng không được nâng lên ngang hàng với bốn nguồn gốc ở mục 1. Bản đồ sử dụng chi tiết nằm tại `docs/FPT_MCU_REFERENCE_MAP.md`.
+
 ## 3. Quy ước page reference
 
 - Tất cả `pdfPage` trong database là **1-based page trong PDF viewer**, không phải số in ở footer.
@@ -260,4 +264,3 @@ AI-generated content mặc định là `draft`, kể cả khi có citation tự 
 - Không publish toàn văn/ảnh trang PDF ra deployment public mặc định.
 - UI chỉ hiển thị page cho người dùng sở hữu file local.
 - Export portable mặc định không chứa PDF; tùy chọn include source files phải có cảnh báo dung lượng/quyền sử dụng.
-
