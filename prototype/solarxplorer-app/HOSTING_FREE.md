@@ -38,27 +38,31 @@ HTTPS: Google yeu cau external Application Load Balancer va cac thanh phan co ti
 
 - https://docs.cloud.google.com/storage/docs/hosting-static-website
 
-## Khuyen nghi cho texture nang: Cloudflare Pages
+## Khuyen nghi cho texture nang: Cloudflare Workers Static Assets
 
 Ban build hien tai co khoang 14.61 MiB texture; file lon nhat la `8k_earth.jpg`
 khoang 4.35 MiB. Cloudflare Pages Free cho static asset request mien phi, khong gioi
 han bandwidth theo tai lieu hien tai, nen de chiu hon Firebase neu co nhieu nguoi xem.
 
-Git deployment:
+Repository da co `wrangler.jsonc` o root. Voi Worker `celestails32`, vao
+Settings > Build va dat:
 
 | Truong | Gia tri |
 |---|---|
-| Root directory | `prototype/solarxplorer-app` |
+| Root directory | `/` hoac de trong |
 | Build command | `npm run build` |
-| Build output directory | `dist` |
+| Deploy command | `npx wrangler deploy` |
 | Node version | 20 hoac 22 |
+
+Khong dat output thanh `prototype`. Lenh root build tao
+`prototype/solarxplorer-app/dist`; `wrangler.jsonc` se upload duy nhat thu muc nay.
 
 Direct Upload:
 
 ```powershell
-Set-Location D:\BotMedical\s32k144-learning-universe\prototype\solarxplorer-app
+Set-Location D:\BotMedical\s32k144-learning-universe
 npm run build
-npx wrangler pages deploy .\dist --project-name s32k144-neon-universe
+npx wrangler deploy
 ```
 
 Cloudflare cung chi yeu cau chu web dang nhap luc deploy; khach xem khong dang nhap.

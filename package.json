@@ -1,0 +1,7 @@
+{
+  "name": "celestails32-deploy",
+  "private": true,
+  "scripts": {
+    "build": "npm --prefix prototype/solarxplorer-app install --ignore-scripts && npm --prefix prototype/solarxplorer-app run build"
+  }
+}

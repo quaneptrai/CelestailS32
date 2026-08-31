@@ -35,11 +35,12 @@ Mở `http://127.0.0.1:4173/`.
 ## Build và kiểm thử
 
 ```powershell
-Set-Location .\prototype\solarxplorer-app
-npm ci --ignore-scripts
 npm run build
+Set-Location .\prototype\solarxplorer-app
 python .\visual_smoke.py
 ```
+
+Cloudflare Workers Builds dùng `wrangler.jsonc` tại root và deploy duy nhất bản production trong `prototype/solarxplorer-app/dist`; không deploy trực tiếp thư mục `prototype`.
 
 Smoke test hợp lệ sẽ in:
 

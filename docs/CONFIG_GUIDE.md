@@ -90,19 +90,23 @@ python .\visual_smoke.py
 
 Smoke test kiểm tra WebGL, click/focus hành tinh, topic satellites, kéo/resize cửa sổ, roadmap, search và các bài GPIO/ADC/CAN trọng yếu.
 
-## 4. Deploy Cloudflare Pages
+## 4. Deploy bằng Cloudflare Workers Builds
 
-Đây là cấu hình khuyến nghị cho repository hiện tại:
+Repository có `wrangler.jsonc` ở root để khóa static assets vào đúng bản Vite production. Trong Cloudflare Dashboard → Worker `celestails32` → Settings → Build, dùng:
 
 | Mục | Giá trị |
 |---|---|
 | Production branch | `main` |
-| Root directory | `prototype/solarxplorer-app` |
+| Root directory | `/` hoặc để trống |
 | Build command | `npm run build` |
-| Build output directory | `dist` |
+| Deploy command | `npx wrangler deploy` |
 | Node version | `20` hoặc `22` |
 
-Sau khi kết nối GitHub, mỗi lần push vào `main` Cloudflare Pages sẽ tự build và cập nhật site. Người xem không cần đăng nhập.
+Lệnh build ở root tự cài dependency và build `prototype/solarxplorer-app`; Wrangler chỉ upload `prototype/solarxplorer-app/dist`. Trong log đúng phải có `vite ... building for production` trước `wrangler deploy`, và phần `Detected Project Settings` phải trỏ đến thư mục `dist`, không phải `prototype`.
+
+Sau khi kết nối GitHub, mỗi lần push vào `main` Workers Builds sẽ tự build và cập nhật site. Người xem không cần đăng nhập.
+
+Nếu log hiện `Output Directory: prototype`, đó là auto-detection sai và sẽ deploy giao diện prototype cũ. Không dùng cấu hình đó.
 
 Chi tiết Firebase và Cloudflare xem `prototype/solarxplorer-app/HOSTING_FREE.md`.
 
