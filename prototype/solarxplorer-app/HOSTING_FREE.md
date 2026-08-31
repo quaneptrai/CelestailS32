@@ -48,7 +48,7 @@ Git deployment:
 
 | Truong | Gia tri |
 |---|---|
-| Root directory | `s32k144-learning-universe/prototype/solarxplorer-app` |
+| Root directory | `prototype/solarxplorer-app` |
 | Build command | `npm run build` |
 | Build output directory | `dist` |
 | Node version | 20 hoac 22 |

@@ -1,6 +1,9 @@
 import { bareMetalCourse } from "./driver-course-v2.js";
 import { deepLectureNotes, sourceGuideFor } from "./lecture-notes-v3.js";
 import { explainConcept } from "./concept-guide-v4.js";
+import { installCustomModules } from "./custom-course-content.js";
+
+installCustomModules(bareMetalCourse);
 
 const domains = {
   Mercury: {
@@ -504,6 +507,18 @@ const planetLibraries = {
 window.addEventListener("solarxplorer:body-selected", (event) => {
   const planetName = event.detail.name;
   if (planetLibraries[planetName]) {
+    const topics = moduleIndexesForPlanet(planetName).map(({ module, index }) => ({
+      id: module.id,
+      title: module.title,
+      shortTitle: module.title.replace(/^.*?—\s*/, ""),
+      moduleIndex: index,
+      planetName,
+    }));
+    if (Number.isInteger(event.detail.planetIndex)) {
+      window.dispatchEvent(new CustomEvent("aris:learning-satellites", {
+        detail: { planetIndex: event.detail.planetIndex, planetName, topics },
+      }));
+    }
     renderPlanetLibrary(planetName);
     return;
   }
@@ -514,6 +529,12 @@ window.addEventListener("solarxplorer:body-selected", (event) => {
   if (!planetName) {
     card.style.display = "none";
   }
+});
+
+window.addEventListener("aris:topic-selected", (event) => {
+  const moduleIndex = Number(event.detail?.moduleIndex);
+  if (!Number.isInteger(moduleIndex)) return;
+  renderCourseLesson(moduleIndex, event.detail?.planetName || planetForModule(bareMetalCourse.modules[moduleIndex]));
 });
 
 window.addEventListener("solarxplorer:sun-selected", () => renderCourseRoadmap(null));
@@ -839,6 +860,7 @@ function renderLegacyCourseLesson(index) {
 }
 
 function planetForModule(module) {
+  if (module.planet) return module.planet;
   if (module.phase === "gpio") return "Earth";
   if (module.phase === "adc") return "Mars";
   if (module.phase === "can") return "Saturn";
@@ -851,7 +873,7 @@ function moduleIndexesForPlanet(planetName) {
   const ids = new Set(planetLibraries[planetName]?.moduleIds || []);
   return bareMetalCourse.modules
     .map((module, index) => ({ module, index }))
-    .filter(({ module }) => ids.has(module.id));
+    .filter(({ module }) => ids.has(module.id) || module.planet === planetName);
 }
 
 function renderPlanetLibrary(planetName) {
@@ -962,8 +984,8 @@ function renderCourseRoadmap(focusPhase = courseRoadmapFocus) {
   const normalizeSearchText = (value) => String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   const moduleSearchIndex = modules.map((module) => {
     const note = deepLectureNotes[module.id] || {};
-    const explainedConcepts = (module.concepts || []).flatMap((concept) => {
-      const explanation = explainConcept(module, concept);
+    const explainedConcepts = (module.concepts || []).flatMap((concept, conceptIndex) => {
+      const explanation = { ...explainConcept(module, concept), ...(module.conceptDetails?.[conceptIndex] || {}) };
       return [concept, explanation.plain, explanation.mechanism, explanation.source, explanation.search];
     });
     return normalizeSearchText(JSON.stringify([module, note, sourceGuideFor(module), explainedConcepts]));
@@ -1048,7 +1070,7 @@ function renderCourseLesson(index, planetName = null) {
   const modules = bareMetalCourse.modules;
   const safeIndex = Math.min(Math.max(index, 0), modules.length - 1);
   const module = modules[safeIndex];
-  const lectureNote = deepLectureNotes[module.id] || { intro: "", theory: [], example: "" };
+  const lectureNote = deepLectureNotes[module.id] || module.lecture || { intro: "", theory: [], example: "" };
   const phase = bareMetalCourse.phases.find((item) => item.id === module.phase);
   const topicPlanet = planetName || planetForModule(module);
   const planetEntries = moduleIndexesForPlanet(topicPlanet);
@@ -1086,7 +1108,7 @@ function renderCourseLesson(index, planetName = null) {
   const theoryItems = [...(lectureNote.theory || []), ...(module.theory || [])];
   const conceptSeeds = module.concepts.length ? module.concepts : theoryItems.map(([title]) => title);
   const conceptGuide = conceptSeeds.map((concept, conceptIndex) => {
-    const explanation = explainConcept(module, concept);
+    const explanation = { ...explainConcept(module, concept), ...(module.conceptDetails?.[conceptIndex] || {}) };
     return `<article class="course-concept-card"><header><span>${String(conceptIndex + 1).padStart(2, "0")}</span><h6>${escapeHtml(concept)}</h6></header><div class="course-concept-body"><section><b>NEWBIE #101</b><p>${escapeHtml(explanation.plain)}</p></section><section><b>CƠ CHẾ KỸ THUẬT</b><p>${escapeHtml(explanation.mechanism)}</p></section></div><footer><span><b>NGUỒN:</b> ${escapeHtml(explanation.source)}</span><code>PDF SEARCH: ${escapeHtml(explanation.search)}</code></footer></article>`;
   }).join("");
   const theory = theoryItems.length ? `<section id="lessonTheory" class="mcu-lesson-block course-wide-block course-theory-block"><div class="course-theory-heading"><span>GIẢI THÍCH KHÁI NIỆM</span><b>ĐỌC TRƯỚC KHI VIẾT REGISTER</b></div><div class="course-theory-grid">${theoryItems.map(([title, body], theoryIndex) => `<article><span>${String(theoryIndex + 1).padStart(2, "0")}</span><div><h6>${escapeHtml(title)}</h6><p>${escapeHtml(body)}</p></div></article>`).join("")}</div></section>` : "";
@@ -1182,6 +1204,138 @@ function setCardHeader(title, badge) {
 function resetCardScroll() {
   const content = card.querySelector(".planet-info-content");
   if (content) content.scrollTop = 0;
+}
+
+const CARD_POSITION_STORAGE = "aris-draggable-card-positions-v1";
+let cardDragPositions = new Map();
+
+function loadCardDragPositions() {
+  try {
+    cardDragPositions = new Map(Object.entries(JSON.parse(localStorage.getItem(CARD_POSITION_STORAGE) || "{}")));
+  } catch {
+    cardDragPositions = new Map();
+  }
+}
+
+function saveCardDragPositions() {
+  try { localStorage.setItem(CARD_POSITION_STORAGE, JSON.stringify(Object.fromEntries(cardDragPositions))); }
+  catch { /* Position persistence is optional. */ }
+}
+
+function resetCardPosition() {
+  const mode = card.dataset.mcuMode || "default";
+  cardDragPositions.delete(mode);
+  saveCardDragPositions();
+  ["left", "top", "right", "bottom", "width", "height", "transform", "transition", "animation"].forEach((property) => card.style.removeProperty(property));
+}
+
+function applySavedCardPosition() {
+  const mode = card.dataset.mcuMode || "default";
+  const saved = cardDragPositions.get(mode);
+  if (!saved) {
+    ["left", "top", "right", "bottom", "width", "height", "transform", "transition", "animation"].forEach((property) => card.style.removeProperty(property));
+    return;
+  }
+  const rect = card.getBoundingClientRect();
+  const width = Math.min(Math.max(Number(saved.w) || rect.width || 430, 340), window.innerWidth - 16);
+  const height = Math.min(Math.max(Number(saved.h) || rect.height || 320, 260), window.innerHeight - 16);
+  const maxX = Math.max(8, window.innerWidth - width - 8);
+  const maxY = Math.max(8, window.innerHeight - height - 8);
+  const x = Math.min(Math.max(Number(saved.x) || 8, 8), maxX);
+  const y = Math.min(Math.max(Number(saved.y) || 8, 8), maxY);
+  Object.assign(card.style, { left: `${x}px`, top: `${y}px`, right: "auto", bottom: "auto", width: `${width}px`, height: `${height}px`, transform: "none", animation: "none" });
+}
+
+function installDraggableCard() {
+  const header = card.querySelector(".planet-info-header");
+  if (!header || header.dataset.dragReady === "true") return;
+  header.dataset.dragReady = "true";
+  header.title = "Giữ chuột và kéo để di chuyển · Double-click để về vị trí mặc định";
+  const hint = document.createElement("span");
+  hint.className = "aris-drag-hint";
+  hint.textContent = "↕ DRAG";
+  header.appendChild(hint);
+  const resizeHandle = document.createElement("span");
+  resizeHandle.className = "aris-resize-handle";
+  resizeHandle.title = "Kéo để thay đổi kích thước cửa sổ";
+  resizeHandle.setAttribute("aria-label", "Resize lesson window");
+  card.appendChild(resizeHandle);
+  loadCardDragPositions();
+
+  let drag = null;
+  header.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0 || event.target.closest("button, a, input, select, textarea")) return;
+    const rect = card.getBoundingClientRect();
+    drag = { pointerId: event.pointerId, offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top, width: rect.width, height: rect.height };
+    Object.assign(card.style, { left: `${rect.left}px`, top: `${rect.top}px`, right: "auto", bottom: "auto", transform: "none", transition: "none", animation: "none" });
+    card.classList.add("is-dragging");
+    header.setPointerCapture(event.pointerId);
+    event.preventDefault();
+  });
+
+  header.addEventListener("pointermove", (event) => {
+    if (!drag || event.pointerId !== drag.pointerId) return;
+    const maxX = Math.max(8, window.innerWidth - drag.width - 8);
+    const maxY = Math.max(8, window.innerHeight - drag.height - 8);
+    const x = Math.min(Math.max(event.clientX - drag.offsetX, 8), maxX);
+    const y = Math.min(Math.max(event.clientY - drag.offsetY, 8), maxY);
+    card.style.left = `${x}px`;
+    card.style.top = `${y}px`;
+  });
+
+  const finishDrag = (event) => {
+    if (!drag || event.pointerId !== drag.pointerId) return;
+    const mode = card.dataset.mcuMode || "default";
+    const previous = cardDragPositions.get(mode) || {};
+    cardDragPositions.set(mode, { ...previous, x: parseFloat(card.style.left), y: parseFloat(card.style.top) });
+    saveCardDragPositions();
+    card.classList.remove("is-dragging");
+    if (header.hasPointerCapture(event.pointerId)) header.releasePointerCapture(event.pointerId);
+    drag = null;
+  };
+  header.addEventListener("pointerup", finishDrag);
+  header.addEventListener("pointercancel", finishDrag);
+  header.addEventListener("dblclick", (event) => {
+    if (event.target.closest("button, a")) return;
+    resetCardPosition();
+    event.preventDefault();
+  });
+
+  let resize = null;
+  resizeHandle.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0) return;
+    const rect = card.getBoundingClientRect();
+    resize = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, x: rect.left, y: rect.top, width: rect.width, height: rect.height };
+    Object.assign(card.style, { left: `${rect.left}px`, top: `${rect.top}px`, right: "auto", bottom: "auto", width: `${rect.width}px`, height: `${rect.height}px`, transform: "none", transition: "none", animation: "none" });
+    card.classList.add("is-resizing");
+    resizeHandle.setPointerCapture(event.pointerId);
+    event.preventDefault();
+    event.stopPropagation();
+  });
+  resizeHandle.addEventListener("pointermove", (event) => {
+    if (!resize || event.pointerId !== resize.pointerId) return;
+    const maxWidth = Math.max(340, window.innerWidth - resize.x - 8);
+    const maxHeight = Math.max(260, window.innerHeight - resize.y - 8);
+    card.style.width = `${Math.min(Math.max(resize.width + event.clientX - resize.startX, 340), maxWidth)}px`;
+    card.style.height = `${Math.min(Math.max(resize.height + event.clientY - resize.startY, 260), maxHeight)}px`;
+  });
+  const finishResize = (event) => {
+    if (!resize || event.pointerId !== resize.pointerId) return;
+    const mode = card.dataset.mcuMode || "default";
+    const rect = card.getBoundingClientRect();
+    const previous = cardDragPositions.get(mode) || {};
+    cardDragPositions.set(mode, { ...previous, x: rect.left, y: rect.top, w: rect.width, h: rect.height });
+    saveCardDragPositions();
+    card.classList.remove("is-resizing");
+    if (resizeHandle.hasPointerCapture(event.pointerId)) resizeHandle.releasePointerCapture(event.pointerId);
+    resize = null;
+  };
+  resizeHandle.addEventListener("pointerup", finishResize);
+  resizeHandle.addEventListener("pointercancel", finishResize);
+
+  new MutationObserver(() => requestAnimationFrame(applySavedCardPosition)).observe(card, { attributes: true, attributeFilter: ["data-mcu-mode"] });
+  window.addEventListener("resize", applySavedCardPosition);
+  requestAnimationFrame(applySavedCardPosition);
 }
 
 function setStats(stats) {
@@ -1295,6 +1449,7 @@ function adaptStaticUI() {
   document.getElementById("startCourseAdapter")?.addEventListener("click", () => renderCourseRoadmap(null));
 
   document.querySelector(".nasa-footer .footer-content").textContent = "ARIS · S32K144 INTERNAL LEARNING UNIVERSE";
+  installDraggableCard();
   installNeonToolbar();
   installUniverseOnlyMode();
 }

@@ -28,7 +28,7 @@ def main() -> None:
         )
 
         page.goto(BASE_URL, wait_until="networkidle", timeout=30_000)
-        page.evaluate("localStorage.removeItem('s32k144-driver-school-progress-v2')")
+        page.evaluate("localStorage.removeItem('s32k144-driver-school-progress-v2'); localStorage.removeItem('aris-draggable-card-positions-v1')")
         page.reload(wait_until="networkidle")
         page.locator("canvas").wait_for(timeout=15_000)
         page.wait_for_function(
@@ -59,12 +59,57 @@ def main() -> None:
         page.locator("#labelToggle").evaluate("button => button.click()")
         earth_label = page.locator(".planet-label").nth(2)
         earth_label.wait_for(state="visible")
+        page.wait_for_function(
+            "el => Number.isFinite(parseFloat(el.style.left)) && Number.isFinite(parseFloat(el.style.top))",
+            arg=earth_label.element_handle(),
+        )
         earth_point = earth_label.evaluate(
             "el => ({x: parseFloat(el.style.left), y: parseFloat(el.style.top) + 20})"
         )
         page.mouse.click(earth_point["x"], earth_point["y"])
         page.locator('#planetInfoCard[data-mcu-mode="planet-library"]').wait_for()
         assert "EARTH" in page.locator("#planetName").inner_text()
+        assert page.locator(".learning-satellite-label").count() == 8
+        assert page.locator(".learning-satellite-label").first.is_visible()
+        page.wait_for_timeout(1400)
+        card_before_drag = page.locator("#planetInfoCard").bounding_box()
+        drag_header = page.locator("#planetInfoCard .planet-info-header").bounding_box()
+        page.mouse.move(drag_header["x"] + 70, drag_header["y"] + 28)
+        page.mouse.down()
+        page.mouse.move(drag_header["x"] - 260, drag_header["y"] + 150, steps=12)
+        page.mouse.up()
+        card_after_drag = page.locator("#planetInfoCard").bounding_box()
+        assert abs(card_after_drag["x"] - card_before_drag["x"]) > 200
+        assert page.evaluate("JSON.parse(localStorage.getItem('aris-draggable-card-positions-v1'))['planet-library'] !== undefined")
+
+        # The lesson/library window must also resize from its bottom-right handle.
+        resize_handle = page.locator(".aris-resize-handle")
+        assert resize_handle.is_visible()
+        handle_box = resize_handle.bounding_box()
+        card_before_resize = page.locator("#planetInfoCard").bounding_box()
+        page.mouse.move(handle_box["x"] + 10, handle_box["y"] + 10)
+        page.mouse.down()
+        page.mouse.move(handle_box["x"] + 170, handle_box["y"] - 150, steps=12)
+        page.mouse.up()
+        card_after_resize = page.locator("#planetInfoCard").bounding_box()
+        assert card_after_resize["width"] > card_before_resize["width"] + 120, (
+            card_before_resize,
+            card_after_resize,
+        )
+        assert card_after_resize["height"] < card_before_resize["height"] - 100, (
+            card_before_resize,
+            card_after_resize,
+        )
+        assert page.evaluate(
+            """() => {
+                const saved = JSON.parse(localStorage.getItem('aris-draggable-card-positions-v1'))['planet-library'];
+                return saved.w > 540 && saved.h >= 260;
+            }"""
+        )
+        page.screenshot(path=OUTPUT / "earth-focused-with-topic-satellites.png", full_page=True)
+        page.locator(".learning-satellite-label").first.evaluate("button => button.click()")
+        page.locator('#planetInfoCard[data-mcu-mode="planet-topic"]').wait_for()
+        assert "MODULE 05" in page.locator("#moonsSection > h4").inner_text()
         page.locator("#closePlanetInfo").click()
 
         # The right-side planet list must open content, not only move the camera.
@@ -72,6 +117,7 @@ def main() -> None:
         page.locator('.planet-item[data-body-name="Saturn"]').click()
         page.locator('#planetInfoCard[data-mcu-mode="planet-library"]').wait_for()
         assert "SATURN" in page.locator("#planetName").inner_text()
+        assert page.locator(".learning-satellite-label").count() == 7
         page.locator("#closePlanetInfo").click()
 
         page.locator("#openStartCourse").click()

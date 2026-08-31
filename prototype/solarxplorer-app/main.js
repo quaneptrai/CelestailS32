@@ -1489,17 +1489,13 @@ function updatePlanetLabels() {
     label.planetMesh.getWorldPosition(vector);
     vector.project(camera);
     
+    const visible = vector.z >= -1 && vector.z <= 1 && Math.abs(vector.x) <= 1.08 && Math.abs(vector.y) <= 1.08;
+    label.element.style.display = visible && showPlanetLabels ? 'block' : 'none';
+    if (!visible) return;
     const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
     const y = (vector.y * -0.5 + 0.5) * window.innerHeight;
-    
     label.element.style.left = x + 'px';
     label.element.style.top = (y - 20) + 'px';
-    
-    if (vector.z > 1) {
-      label.element.style.display = 'none';
-    } else {
-      label.element.style.display = showPlanetLabels ? 'block' : 'none';
-    }
   });
 }
 
@@ -1538,23 +1534,158 @@ function updateMoonLabels() {
     label.moonMesh.getWorldPosition(vector);
     vector.project(camera);
     
+    const visible = vector.z >= -1 && vector.z <= 1 && Math.abs(vector.x) <= 1.08 && Math.abs(vector.y) <= 1.08;
+    label.element.style.display = visible && showMoonLabels ? 'block' : 'none';
+    if (!visible) return;
     const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
     const y = (vector.y * -0.5 + 0.5) * window.innerHeight;
-    
     label.element.style.left = x + 'px';
     label.element.style.top = (y - 15) + 'px';
-    
-    if (vector.z > 1) {
-      label.element.style.display = 'none';
-    } else {
-      label.element.style.display = showMoonLabels ? 'block' : 'none';
-    }
   });
 }
 
 // Create labels
 createPlanetLabels();
 createMoonLabels();
+
+// ARIS learning satellites: each course topic becomes a clickable moon around
+// the selected knowledge planet. These are separate from natural solar-system moons.
+let learningSatelliteState = null;
+let cameraFlight = null;
+const learningSatelliteLabels = [];
+const learningSatellitePalette = [0x67e8f9, 0x5eead4, 0xfbbf24, 0xc4b5fd, 0xfb7185, 0x86efac];
+
+function clearLearningSatellites() {
+  if (learningSatelliteState?.planet?.mesh && learningSatelliteState.group) {
+    learningSatelliteState.planet.mesh.remove(learningSatelliteState.group);
+    learningSatelliteState.group.traverse((object) => {
+      object.geometry?.dispose();
+      if (Array.isArray(object.material)) object.material.forEach((material) => material.dispose());
+      else object.material?.dispose();
+    });
+  }
+  learningSatelliteLabels.splice(0).forEach(({ element }) => element.remove());
+  learningSatelliteState = null;
+}
+
+function createLearningSatellites({ planetIndex, planetName, topics = [] }) {
+  const planet = planetMeshes[planetIndex];
+  const body = celestialBodies[planetIndex];
+  if (!planet || !body || !topics.length) {
+    clearLearningSatellites();
+    return;
+  }
+
+  clearLearningSatellites();
+  const group = new THREE.Group();
+  group.name = `ARIS_TOPICS_${planetName}`;
+  planet.mesh.add(group);
+  const satellites = [];
+  const shells = Math.min(3, Math.max(1, Math.ceil(topics.length / 4)));
+
+  for (let shell = 0; shell < shells; shell += 1) {
+    const radius = body.size + 1.8 + shell * Math.max(1.25, body.size * 0.18);
+    const points = Array.from({ length: 96 }, (_, pointIndex) => {
+      const angle = (pointIndex / 96) * Math.PI * 2;
+      return new THREE.Vector3(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
+    });
+    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+    const material = new THREE.LineBasicMaterial({ color: learningSatellitePalette[shell], transparent: true, opacity: 0.2 });
+    const orbit = new THREE.LineLoop(geometry, material);
+    orbit.rotation.x = (shell - (shells - 1) / 2) * 0.18;
+    group.add(orbit);
+  }
+
+  topics.forEach((topic, topicIndex) => {
+    const shell = topicIndex % shells;
+    const shellTopics = topics.filter((_, index) => index % shells === shell);
+    const shellPosition = shellTopics.findIndex((item) => item.moduleIndex === topic.moduleIndex);
+    const radius = body.size + 1.8 + shell * Math.max(1.25, body.size * 0.18);
+    const angle = (shellPosition / shellTopics.length) * Math.PI * 2 + shell * 0.6;
+    const pivot = new THREE.Object3D();
+    pivot.rotation.y = angle;
+    pivot.rotation.z = (shell - (shells - 1) / 2) * 0.12;
+    const size = Math.max(0.2, Math.min(0.62, body.size * 0.1 + 0.16));
+    const geometry = new THREE.IcosahedronGeometry(size, 2);
+    const material = new THREE.MeshStandardMaterial({
+      color: learningSatellitePalette[topicIndex % learningSatellitePalette.length],
+      emissive: learningSatellitePalette[topicIndex % learningSatellitePalette.length],
+      emissiveIntensity: 0.85,
+      roughness: 0.38,
+      metalness: 0.36,
+    });
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.position.x = radius;
+    mesh.scale.setScalar(0.01);
+    mesh.userData.arisTopic = topic;
+    mesh.userData.arisBornAt = performance.now() + topicIndex * 70;
+    pivot.add(mesh);
+    group.add(pivot);
+
+    const label = document.createElement('button');
+    label.type = 'button';
+    label.className = 'learning-satellite-label';
+    label.innerHTML = `<b>${topic.id}</b><span>${topic.shortTitle || topic.title}</span>`;
+    label.addEventListener('click', (event) => {
+      event.stopPropagation();
+      window.dispatchEvent(new CustomEvent('aris:topic-selected', { detail: topic }));
+    });
+    document.body.appendChild(label);
+    learningSatelliteLabels.push({ element: label, mesh, topic });
+    satellites.push({ mesh, pivot, orbit: null, speed: 0.0025 + (topicIndex % 4) * 0.00055, topic });
+  });
+
+  learningSatelliteState = { planet, planetIndex, planetName, group, satellites };
+  document.body.classList.add('aris-planet-focused');
+}
+
+function updateLearningSatellites() {
+  if (!learningSatelliteState) return;
+  const now = performance.now();
+  learningSatelliteState.satellites.forEach((satellite) => {
+    satellite.pivot.rotation.y += satellite.speed * Math.max(animationSpeed, 0.15);
+    satellite.mesh.rotation.x += 0.009;
+    satellite.mesh.rotation.y += 0.014;
+    const entrance = THREE.MathUtils.clamp((now - satellite.mesh.userData.arisBornAt) / 520, 0, 1);
+    const eased = 1 - Math.pow(1 - entrance, 3);
+    satellite.mesh.scale.setScalar(eased);
+  });
+
+  learningSatelliteLabels.forEach((label) => {
+    const vector = new THREE.Vector3();
+    label.mesh.getWorldPosition(vector);
+    vector.project(camera);
+    const visible = vector.z >= -1 && vector.z <= 1 && Math.abs(vector.x) <= 1.08 && Math.abs(vector.y) <= 1.08;
+    label.element.style.display = visible ? 'grid' : 'none';
+    if (!visible) return;
+    label.element.style.left = `${(vector.x * 0.5 + 0.5) * window.innerWidth}px`;
+    label.element.style.top = `${(vector.y * -0.5 + 0.5) * window.innerHeight}px`;
+  });
+}
+
+function focusPlanetCinematic(planetIndex) {
+  const planet = planetMeshes[planetIndex];
+  const body = celestialBodies[planetIndex];
+  if (!planet || !body) return;
+  followingTarget = planet;
+  followingType = 'planet';
+  followingPlanet = planet;
+  const distance = Math.max(body.size * 4.2, 9.5);
+  followOffset.set(distance, distance * 0.34, distance);
+  lastPlanetPosition.set(0, 0, 0);
+  userCameraOffset.set(0, 0, 0);
+  cameraFlight = {
+    startedAt: performance.now(),
+    duration: 1050,
+    fromPosition: camera.position.clone(),
+    fromTarget: controls.target.clone(),
+  };
+  controls.enableZoom = true;
+  controls.minDistance = Math.max(body.size * 1.45, 2.4);
+  controls.maxDistance = distance * 4;
+}
+
+window.addEventListener('aris:learning-satellites', (event) => createLearningSatellites(event.detail || {}));
 
 // Animation loop
 function animate() {
@@ -1632,13 +1763,23 @@ function animate() {
       distantStars.rotation.y += 0.0001 * realTimeMultiplier * (eclipseTourActive ? 0.06 : 1.0);
   }
 
+  updateLearningSatellites();
   controls.update();
   
   if (followingPlanet) {
     const planetPos = new THREE.Vector3();
     followingPlanet.mesh.getWorldPosition(planetPos);
-    
-    if (followingType === 'sun') {
+
+    if (cameraFlight && followingType === 'planet') {
+      const progress = THREE.MathUtils.clamp((performance.now() - cameraFlight.startedAt) / cameraFlight.duration, 0, 1);
+      const eased = progress < 0.5 ? 4 * progress * progress * progress : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+      camera.position.lerpVectors(cameraFlight.fromPosition, planetPos.clone().add(followOffset), eased);
+      controls.target.lerpVectors(cameraFlight.fromTarget, planetPos, eased);
+      if (progress >= 1) {
+        cameraFlight = null;
+        lastPlanetPosition.copy(planetPos);
+      }
+    } else if (followingType === 'sun') {
       // For Sun following, allow zoom but maintain target
       controls.target.copy(planetPos);
       // Don't override camera position - let controls handle zoom
@@ -2060,16 +2201,7 @@ if (planetList) {
         event.stopPropagation();
         const planet = planetMeshes[globalIndex];
         if (planet) {
-          followingPlanet = planet;
-          const distance = Math.max(body.size * 8, 15);
-          followOffset.set(distance, distance * 0.5, distance);
-          lastPlanetPosition.set(0, 0, 0);
-          userCameraOffset.set(0, 0, 0);
-          const planetPos = new THREE.Vector3();
-          planet.mesh.getWorldPosition(planetPos);
-          camera.position.copy(planetPos.clone().add(followOffset));
-          controls.target.copy(planetPos);
-          controls.update();
+          focusPlanetCinematic(globalIndex);
           showPlanetInfoCard(body, globalIndex);
         }
       });
@@ -2311,6 +2443,9 @@ function followSun() {
 
 // Stop following planet function
 function stopFollowingPlanet() {
+  clearLearningSatellites();
+  document.body.classList.remove('aris-planet-focused');
+  cameraFlight = null;
   followingPlanet = null;
   followingTarget = null;
   followingType = null;
@@ -2729,6 +2864,11 @@ function onMouseClick(event) {
   // Add planet meshes
   const planetMeshObjects = planetMeshes.map(p => p.mesh);
   clickableObjects = clickableObjects.concat(planetMeshObjects);
+
+  // ARIS course moons are real 3D buttons. They stay clickable while the
+  // natural astronomy moons remain visual-only in this learning mode.
+  const learningMeshes = learningSatelliteState?.satellites?.map((satellite) => satellite.mesh) || [];
+  clickableObjects = clickableObjects.concat(learningMeshes);
   
   // Do NOT add moon meshes to clickableObjects, so moons are not clickable
   let moonMeshes = [];
@@ -2753,9 +2893,16 @@ function onMouseClick(event) {
   
   if (intersects.length > 0) {
     const intersectedObject = intersects[0].object;
+
+    if (intersectedObject.userData?.arisTopic) {
+      window.dispatchEvent(new CustomEvent('aris:topic-selected', { detail: intersectedObject.userData.arisTopic }));
+      return;
+    }
     
     // Check if it's the sun
     if (intersectedObject === sun) {
+      clearLearningSatellites();
+      document.body.classList.remove('aris-planet-focused');
       followSun();
       window.dispatchEvent(new CustomEvent('solarxplorer:sun-selected'));
       return;
@@ -2772,7 +2919,7 @@ function onMouseClick(event) {
     const planetIndex = planetMeshObjects.indexOf(intersectedObject);
     if (planetIndex !== -1) {
       const body = celestialBodies[planetIndex];
-      
+      focusPlanetCinematic(planetIndex);
       // Show information card
       showPlanetInfoCard(body, planetIndex);
     }
@@ -2780,6 +2927,7 @@ function onMouseClick(event) {
     // A minimum screen-space hit area keeps small moving planets usable on desktop.
     const nearbyPlanetIndex = findNearbyPlanet(event);
     if (nearbyPlanetIndex !== -1) {
+      focusPlanetCinematic(nearbyPlanetIndex);
       showPlanetInfoCard(celestialBodies[nearbyPlanetIndex], nearbyPlanetIndex);
     } else {
       hidePlanetInfoCard();

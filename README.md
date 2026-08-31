@@ -7,6 +7,9 @@
 - 33 bài theo lộ trình từ đọc tài liệu đến tự viết driver.
 - Lecture V4 cho từng topic: bắt đầu từ số 0, 144 thẻ `NEWBIE #101`, cơ chế S32K144, register/signal flow, ví dụ tính toán, source locator, từ khóa PDF, debug và pass criteria.
 - Tìm kiếm toàn văn 33 bài theo khái niệm, register, lỗi và từ khóa tài liệu.
+- Tự thêm bài/tiểu hành tinh bằng một file `prototype/solarxplorer-app/custom-course-content.js`; xem `docs/CUSTOM_CONTENT_GUIDE.md`.
+- Cửa sổ roadmap, thư viện topic và bài giảng có thể kéo bằng thanh tiêu đề, resize ở góc phải dưới và double-click thanh tiêu đề để reset.
+- Hướng dẫn cấu hình tổng: `docs/CONFIG_GUIDE.md`.
 - Mỗi bài có ma trận bốn tài liệu gốc và nguồn học bổ sung FPT_MCU, nêu rõ tài liệu nào được phép kết luận loại fact nào.
 - Earth: GPIO/PORT driver từ schematic đến interrupt.
 - Mars: ADC driver, clock, calibration và conversion.
